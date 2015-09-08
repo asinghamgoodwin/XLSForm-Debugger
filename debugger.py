@@ -14,16 +14,20 @@ import pudb
 def getSheet(workbook, name):
     return workbook.sheet_by_name(name)
 
-# returns the index of the column with the specified heading
 def findColumnWithHeading(heading, whichSheet):
+    """ returns the index of the column with the specified heading """
+
     for c in range(whichSheet.ncols):
         if whichSheet.row(0)[c].value == heading:
             return c
     return None
 
-# making sure that there is one sheet named 'survey' and one named 'choices' in the workbook.
-# if there isn't, this function returns false, which will halt the whole checking process.
 def check4correctSheets(workbook, errorMessageList):
+    """ making sure that there is one sheet named 'survey' and one named 'choices'
+    if there isn't, this function returns false
+    (which will halt the whole checking process)
+    """
+
     check4survey = False
     check4choices = False
     
@@ -32,45 +36,49 @@ def check4correctSheets(workbook, errorMessageList):
         if sheet_name == 'survey': check4survey = True
     
     if not check4survey or not check4choices:
-        errorMessageList.append("Oops! You need to have one sheet named 'choices' and one sheet named 'survey'. Check to make sure that you have spelled both of those names correctly and that neither are capitalized.")
+        errorMessageList.append("ERROR: SHEET NAMES  -- you must have one sheet named 'choices' and one sheet named 'survey'")
         return False
     else:
-        errorMessageList.append("You have the correct sheets and are good to go! Let's keep checking.")
         return True
 
 
 ##################################### FILL THESE IN SOON #####################################
 def choicesSheetHasCorrectSetup(workbook, errorMessageList):
-    errorMessageList.append("Choices sheet setup error message here")
+    errorMessageList.append("ERROR:  --  Choices sheet setup error message here")
     return True
 
 def surveySheetHasCorrectSetup(workbook, errorMessageList):
-    errorMessageList.append("Survey sheet setup error message here")
+    errorMessageList.append("ERROR:  --  Survey sheet setup error message here")
     return True
 
 def settingsSheetHasCorrectSetup(workbook, errorMessageList):
-    errorMessageList.append("Settings sheet setup error message here")
+    errorMessageList.append("ERROR:  --  Settings sheet setup error message here")
     return True
 ##############################################################################################
 
 
-# parsing the choices sheet
 def parseChoices(workbook, errorMessageList):
+    """ parsing the choices sheet
+    returns a dictionary containing all of the choice list names and their choices
+    """
+
     choicesSheet = workbook.sheet_by_name('choices')
     choicesDict = {} # all multiple choice lists stored here, in the format 'key' --> [list, of, values]
 
     list_nameNumber = findColumnWithHeading('list name', choicesSheet)
     nameNumber = findColumnWithHeading('name', choicesSheet)
 
-    for r, cell in enumerate(choicesSheet.col(list_nameNumber)):
-        if cell.value not in choicesDict.keys():
-            choicesDict[cell.value] = [choicesSheet.col(nameNumber)[r].value]
+    for row, cell in enumerate(choicesSheet.col(list_nameNumber)):
+        value = cell.value
+        correspondingChoiceName = choicesSheet.col(nameNumber)[row].value
+        if value not in choicesDict.keys():
+            choicesDict[value] = [correspondingChoiceName]
         else:
             # if the value is already in the list, warn about it
-            if choicesSheet.col(nameNumber)[r].value in choicesDict[cell.value]:
-                errorMessageList.append("Oops, it looks like you have "+str(choicesSheet.col(nameNumber)[r].value)+" listed twice as a choice for the list "+cell.value)
+            if correspondingChoiceName in choicesDict[value]:
+                errorMessageList.append("ERROR: CHOICES  --  "+str(correspondingChoiceName)+" listed twice as a choice for the list "+value)
             else:
-                choicesDict[cell.value].append(choicesSheet.col(nameNumber)[r].value)
+                choicesDict[value].append(correspondingChoiceName)
 
     return choicesDict
 
@@ -92,8 +100,9 @@ class IntegerQuestion(Question):
         pass
 
 
-# making the Question objects and populating them
 def parseQuestions(workbook):
+    """ making the Question objects and populating them """
+
     surveySheet = getSheet(workbook, 'survey')
     questionsList = []
 
@@ -115,7 +124,7 @@ def parseQuestions(workbook):
             label=row[labelNumber].value))
     return questionsList
 
-##################################### FILL THIS IN SOON #####################################
+############################### FILL THIS IN SOON #####################################
 questionTypeList = ['integer', 'decimal', 'text', 'select_one', 'select_multiple', 'note',
         'geopoint', 'geotrace', 'geoshape', 'date', 'time', 'dateTime', 'image', 'audio',
         'video', 'barcode', 'calculate', 'acknowledge']
@@ -127,11 +136,11 @@ metadataTypeList = ['start', 'end', 'today', 'deviceid', 'subscriberid', 'simser
 
 def checkQuestions(questionsList):
     return True
-##############################################################################################
+#####################################################################################
 
 
-# this is the one function that will be run to check the spreadsheet and output the errors.
 def main():
+    """ overall function, checks the spreadsheet and outputs the errors """
 
     workbook = open_workbook(sys.argv[1], on_demand=True)
     errorMessageList = [] # <-- will get filled with helpful error messages as we go along
