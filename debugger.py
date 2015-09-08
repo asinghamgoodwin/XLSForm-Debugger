@@ -6,12 +6,12 @@ from xlrd import open_workbook
 import pudb
 
 
-workbook = open_workbook(sys.argv[1], on_demand=True)
-errorMessageList = [] # <-- will get filled with helpful error messages as we go along
+#workbook = open_workbook(sys.argv[1], on_demand=True)
+#errorMessageList = [] # <-- will get filled with helpful error messages as we go along
 
 ########## helper functions ##########
 
-def getSheet(name):
+def getSheet(workbook, name):
     return workbook.sheet_by_name(name)
 
 # returns the index of the column with the specified heading
@@ -23,7 +23,7 @@ def findColumnWithHeading(heading, whichSheet):
 
 # making sure that there is one sheet named 'survey' and one named 'choices' in the workbook.
 # if there isn't, this function returns false, which will halt the whole checking process.
-def check4correctSheets():
+def check4correctSheets(workbook, errorMessageList):
     check4survey = False
     check4choices = False
     
@@ -40,22 +40,22 @@ def check4correctSheets():
 
 
 ##################################### FILL THESE IN SOON #####################################
-def choicesSheetHasCorrectSetup():
+def choicesSheetHasCorrectSetup(workbook, errorMessageList):
     errorMessageList.append("Choices sheet setup error message here")
     return True
 
-def surveySheetHasCorrectSetup():
+def surveySheetHasCorrectSetup(workbook, errorMessageList):
     errorMessageList.append("Survey sheet setup error message here")
     return True
 
-def settingsSheetHasCorrectSetup():
+def settingsSheetHasCorrectSetup(workbook, errorMessageList):
     errorMessageList.append("Settings sheet setup error message here")
     return True
 ##############################################################################################
 
 
 # parsing the choices sheet
-def parseChoices():
+def parseChoices(workbook, errorMessageList):
     choicesSheet = workbook.sheet_by_name('choices')
     choicesDict = {} # all multiple choice lists stored here, in the format 'key' --> [list, of, values]
 
@@ -93,8 +93,8 @@ class IntegerQuestion(Question):
 
 
 # making the Question objects and populating them
-def parseQuestions():
-    surveySheet = getSheet('survey')
+def parseQuestions(workbook):
+    surveySheet = getSheet(workbook, 'survey')
     questionsList = []
 
     # figure out which columns are used in the survey sheet
@@ -126,32 +126,35 @@ metadataTypeList = ['start', 'end', 'today', 'deviceid', 'subscriberid', 'simser
 
 
 def checkQuestions(questionsList):
-    errorMessageList.append("Here is where we would put errors found in each question")
     return True
 ##############################################################################################
 
 
 # this is the one function that will be run to check the spreadsheet and output the errors.
-def overallChecker():
-    if check4correctSheets() == False:
+def main():
+
+    workbook = open_workbook(sys.argv[1], on_demand=True)
+    errorMessageList = [] # <-- will get filled with helpful error messages as we go along
+
+    if check4correctSheets(workbook, errorMessageList) == False:
         return errorMessageList
 
     # I wonder if it's ok to only have user input questions, and then no choices sheet or a blank one?
     # This definitely has to get checked and parsed before the survey questions can get checked
-    if choicesSheetHasCorrectSetup():
-        choicesDict = parseChoices()
+    if choicesSheetHasCorrectSetup(workbook, errorMessageList):
+        choicesDict = parseChoices(workbook, errorMessageList)
     else:
         return errorMessageList
 
-    if surveySheetHasCorrectSetup():
-        questionsList = parseQuestions()
+    if surveySheetHasCorrectSetup(workbook, errorMessageList):
+        questionsList = parseQuestions(workbook)
     else:
         return errorMessageList
 
     checkQuestions(questionsList)
 
     # This matters less so I put it below the other two so that they could still get checked if this fails
-    if settingsSheetHasCorrectSetup():
+    if settingsSheetHasCorrectSetup(workbook, errorMessageList):
         pass # <--- make a settings parser function
     else:
         return errorMessageList
@@ -172,6 +175,5 @@ def overallChecker():
     return errorMessageList
 
 
-overallChecker()
-
+main()
 
