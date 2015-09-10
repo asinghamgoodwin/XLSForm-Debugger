@@ -1,6 +1,10 @@
 import sys 
-from xlrd import open_workbook
+#from xlrd import open_workbook
+from pyexcel_ods import get_data
+import json
+import ast
 import pudb
+
 
 from helperFunctions import getSheet, findColumnWithHeading
 from parsing import parseChoices, parseQuestions
@@ -13,44 +17,52 @@ from questionClasses import *
 def main():
     """ overall function, checks the spreadsheet and outputs the errors """
 
-    workbook = open_workbook(sys.argv[1], on_demand=True)
+    #workbook = open_workbook(sys.argv[1], on_demand=True)
+    data = get_data(sys.argv[1])
+    workbookString = json.dumps(data)
+    workbookDict = ast.literal_eval(workbookString)
+
     errorMessageList_setup = []
     errorMessageList_questions = []
     errorMessageList_choices = []
 
     print ""
 
-    if not check4correctSheets(workbook, errorMessageList_setup):
+    if not check4correctSheets(workbookDict, errorMessageList_setup):
         for error in errorMessageList_setup:
             print error
-        return "FATAL ERROR  --  incorrect sheets in workbook"
+        print "FATAL ERROR  --  incorrect sheets in workbook"
+        return False
     print "checking for correct worksheets.......................................OK!"
 
     # I wonder if it's ok to only have user input questions, and then no choices sheet or a blank one?
     # This definitely has to get checked and parsed before the survey questions can get checked
-    if not choicesSheetHasCorrectSetup(workbook, errorMessageList_setup):
+    if not choicesSheetHasCorrectSetup(workbookDict, errorMessageList_setup):
         for error in errorMessageList_setup:
             print error
-        return "FATAL ERROR  --  choices could not be parsed"
+        print "FATAL ERROR  --  choices could not be parsed"
+        return False
 
-    choicesDict = parseChoices(workbook, errorMessageList_choices)
+    choicesDict = parseChoices(workbookDict, errorMessageList_choices)
     print "checking choices sheet setup..........................................OK!"
 
-    if not surveySheetHasCorrectSetup(workbook, errorMessageList_setup):
+    if not surveySheetHasCorrectSetup(workbookDict, errorMessageList_setup):
         for error in errorMessageList_setup:
             print error
-        return "FATAL ERROR  --  survey could not be parsed"
-    questionsList = parseQuestions(workbook)
+        print "FATAL ERROR  --  survey could not be parsed"
+        return False
+    questionsList = parseQuestions(workbookDict)
     print "checking survey sheet setup...........................................OK!"
 
     checkQuestions(questionsList, errorMessageList_questions)
 
 
     # This matters less so I put it below the other two so that they could still get checked if this fails
-    if not settingsSheetHasCorrectSetup(workbook, errorMessageList_setup):
+    if not settingsSheetHasCorrectSetup(workbookDict, errorMessageList_setup):
         for error in errorMessageList_setup:
             print error
-        return "FATAL ERROR  --  survey could not be parsed"
+        print "FATAL ERROR  --  survey could not be parsed"
+        return False
     print "checking settings sheet setup.........................................N/A"
 
     print ""
@@ -67,6 +79,7 @@ def main():
 
     print "Enjoy your survey!....................................................OK!"
     print ""
+    return True
 
 ##    # just for making sure it works right now:
 ##    print ""

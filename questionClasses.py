@@ -29,5 +29,7 @@ class IntegerQuestion(Question):
 
 
 ##########################################################
-def checkQuestions(questionsList):
+def checkQuestions(questionsList, errorMessageList):
+    #errorMessageList.append("ERROR: QUESTION 32  --  error here")
     return True
+
