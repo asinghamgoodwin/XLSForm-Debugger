@@ -9,7 +9,7 @@ import pudb
 from helperFunctions import getSheet, findColumnWithHeading
 from parsing import parseChoices, parseQuestions
 from sheetSetupChecking import (check4correctSheets, settingsSheetHasCorrectSetup,
-        surveySheetHasCorrectSetup, choicesSheetHasCorrectSetup)
+        choicesSheetHasCorrectSetup, surveySheetHasCorrectSetup)
 from questionClasses import *
 
 
@@ -51,10 +51,14 @@ def main():
             print error
         print "FATAL ERROR  --  survey could not be parsed"
         return False
-    questionsList = parseQuestions(workbookDict)
+    questionsList = parseQuestions(workbookDict, errorMessageList_questions)
+########SKETCHY#########
+    questionsList = questionsList[:263]
+    #print "there are this many questions: "+str(len(questionsList))
+#    print questionsList[-3].__dict__
     print "checking survey sheet setup...........................................OK!"
 
-    checkQuestions(questionsList, errorMessageList_questions)
+    checkQuestions(questionsList, errorMessageList_questions, choicesDict)
 
 
     # This matters less so I put it below the other two so that they could still get checked if this fails

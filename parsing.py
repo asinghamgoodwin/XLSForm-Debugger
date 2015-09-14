@@ -6,6 +6,10 @@ from helperFunctions import getSheet, findColumnWithHeading
 from questionClasses import *
 
 
+possibleColumns = ['appearance', 'type', 'name', 'label', 'constraint', 
+    'constraint_message', 'required', 'relevant', 'repeat_count', 'calculation', 'hint']
+
+
 def parseChoices(workbook, errorMessageList):
     """ parsing the choices sheet
     returns a dictionary containing all of the choice list names and their choices
@@ -78,30 +82,52 @@ def parseChoices(workbook, errorMessageList):
 #     return choicesDict
 # 
 
-def parseQuestions(workbook):
+def parseQuestions(workbook, errorMessageList):
     """ making the Question objects and populating them """
 
     surveySheet = getSheet(workbook, 'survey')
     questionsList = []
 
     # figure out which columns are used in the survey sheet
+    columnList = [heading for heading in surveySheet[0] if heading in possibleColumns]
     # make sure the question objects get those attributes added properly
-    columnList = []
 
-    questionTypeNumber = findColumnWithHeading('type', surveySheet)
-    nameNumber = findColumnWithHeading('name', surveySheet)
-    labelNumber = findColumnWithHeading('label', surveySheet)
+    ##########MAKE HELPER FUNCTION########
+
+    #questionTypeNumber = findColumnWithHeading('type', surveySheet)
+    #nameNumber = findColumnWithHeading('name', surveySheet)
+    #labelNumber = findColumnWithHeading('label', surveySheet)
 
     # starts at 1 because the 0th row is full of headings
     for r, row in enumerate(surveySheet):
         if r == 0:
             continue
 
+        # creating a dictionary mapping the cell in each column to the right name
+        inputs = {}
+        for heading in possibleColumns:
+            if heading in columnList:
+                if heading == 'type':
+                    inputs['questionType'] = row[findColumnWithHeading(heading, surveySheet)]
+                else:
+                    inputs[heading] = row[findColumnWithHeading(heading, surveySheet)]
+            else:
+                inputs[heading] = None
+
         questionsList.append(Question(
-            row=r, 
-            questionType=row[questionTypeNumber], 
-            name=row[nameNumber], 
-            label=row[labelNumber]))
+            row=r+1,
+            appearance=inputs['appearance'],
+            questionType=inputs['questionType'],
+            name=inputs['name'],
+            label=inputs['label'],
+            constraint=inputs['constraint'],
+            constraint_message=inputs['constraint_message'],
+            required=inputs['required'],
+            relevant=inputs['relevant'],
+            repeat_count=inputs['repeat_count'],
+            calculation=inputs['calculation'],
+            hint=inputs['hint']))
+
     return questionsList
 
 

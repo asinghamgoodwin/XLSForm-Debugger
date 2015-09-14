@@ -34,6 +34,10 @@ def choicesSheetHasCorrectSetup(workbook, errorMessageList):
 
 def surveySheetHasCorrectSetup(workbook, errorMessageList):
     errorMessageList.append("ERROR: SETUP  --  Survey sheet error message")
+
+    #for heading in surveySheet[0]:
+    #    if heading not in possibleColumns:
+    #        errorMessageList.append("ERROR
     return True
 
 
